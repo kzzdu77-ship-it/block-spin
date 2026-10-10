@@ -1,6 +1,6 @@
---// BlockSpin | Farm Panel (Rayfield)
---// Mobile + PC
---// Single tab: Farm
+--// BlockSpin | Farm Panel
+--// Mobile + PC · Rayfield UI
+--// Toggle button: NYX
 
 if game.PlaceId ~= 127742093697776 then
     warn("[BlockSpin] Jogo errado. Entra no BlockSpin primeiro.")
@@ -12,11 +12,11 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
     Name = "BlockSpin | Farm",
     LoadingTitle = "Carregando painel...",
-    LoadingSubtitle = "by Repo",
+    LoadingSubtitle = "by NYX",
     Theme = "DarkBlue",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "BlockSpinRepo",
+        FolderName = "BlockSpinNYX",
         FileName = "config"
     },
     KeySystem = false
@@ -27,7 +27,6 @@ local RunService        = game:GetService("RunService")
 local VirtualUser       = game:GetService("VirtualUser")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer       = Players.LocalPlayer
-local Camera            = workspace.CurrentCamera
 
 local state = {
     autoFarm        = false,
@@ -49,9 +48,7 @@ local function getRoot() return getChar():FindFirstChild("HumanoidRootPart") end
 
 local function teleportTo(pos, yOffset)
     local root = getRoot()
-    if root then
-        root.CFrame = CFrame.new(pos + Vector3.new(0, yOffset or 3, 0))
-    end
+    if root then root.CFrame = CFrame.new(pos + Vector3.new(0, yOffset or 3, 0)) end
 end
 
 local function getNearestByName(keywords)
@@ -64,10 +61,7 @@ local function getNearestByName(keywords)
             for _, kw in pairs(keywords) do
                 if n:find(kw) then
                     local d = (obj.Position - root.Position).Magnitude
-                    if d < shortest then
-                        shortest = d
-                        nearest = obj
-                    end
+                    if d < shortest then shortest = d; nearest = obj end
                     break
                 end
             end
@@ -92,11 +86,8 @@ local function fireRemotes(keywords, ...)
             for _, kw in pairs(keywords) do
                 if n:find(kw) then
                     pcall(function()
-                        if obj:IsA("RemoteEvent") then
-                            obj:FireServer(...)
-                        else
-                            obj:InvokeServer(...)
-                        end
+                        if obj:IsA("RemoteEvent") then obj:FireServer(...)
+                        else obj:InvokeServer(...) end
                     end)
                     break
                 end
@@ -113,17 +104,11 @@ local function runAutoFarm()
 
     local job = state.selectedJob:lower()
     local keywords
-    if job == "fishing" then
-        keywords = {"fish", "water", "pond", "lake", "ocean"}
-    elseif job == "mining" then
-        keywords = {"mine", "ore", "rock", "coal", "gold"}
-    elseif job == "farming" then
-        keywords = {"crop", "plant", "farm", "seed", "harvest"}
-    elseif job == "delivery" then
-        keywords = {"deliver", "package", "box", "drop"}
-    else
-        keywords = {"job", "work"}
-    end
+    if job == "fishing" then keywords = {"fish","water","pond","lake","ocean"}
+    elseif job == "mining" then keywords = {"mine","ore","rock","coal","gold"}
+    elseif job == "farming" then keywords = {"crop","plant","farm","seed","harvest"}
+    elseif job == "delivery" then keywords = {"deliver","package","box","drop"}
+    else keywords = {"job","work"} end
 
     local target = getNearestByName(keywords)
     if target then
@@ -133,19 +118,18 @@ local function runAutoFarm()
         fireProximity(target)
         local tool = getChar():FindFirstChildOfClass("Tool")
         if tool then pcall(function() tool:Activate() end) end
-        fireRemotes({"farm", "work", "job", "collect", "harvest", "fish", "mine"})
+        fireRemotes({"farm","work","job","collect","harvest","fish","mine"})
         task.wait(0.6)
     end
 
     if state.includePlanting then
-        local plot = getNearestByName({"plot", "soil", "dirt", "plant"})
+        local plot = getNearestByName({"plot","soil","dirt","plant"})
         if plot then
             teleportTo(plot.Position, 3)
             task.wait(0.3)
-            fireRemotes({"plant", "seed", "place"})
+            fireRemotes({"plant","seed","place"})
         end
     end
-
     farmDebounce = false
 end
 
@@ -156,8 +140,7 @@ local function selectRod()
         local best, score = nil, -1
         for _, tool in pairs(backpack:GetChildren()) do
             if tool.Name:lower():find("rod") and #tool.Name > score then
-                score = #tool.Name
-                best = tool
+                score = #tool.Name; best = tool
             end
         end
         if best then pcall(function() getHum():EquipTool(best) end) end
@@ -173,8 +156,7 @@ local function selectBait()
     if state.bait == "Smart Select" then
         for _, tool in pairs(backpack:GetChildren()) do
             if tool.Name:lower():find("bait") then
-                pcall(function() getHum():EquipTool(tool) end)
-                return
+                pcall(function() getHum():EquipTool(tool) end); return
             end
         end
     else
@@ -185,12 +167,12 @@ end
 
 local function sellFish()
     if state.fishAmount <= 0 then return end
-    local sellPart = getNearestByName({"sell", "shop", "market", "merchant"})
+    local sellPart = getNearestByName({"sell","shop","market","merchant"})
     if sellPart then
         teleportTo(sellPart.Position, 3)
         task.wait(0.4)
         fireProximity(sellPart)
-        fireRemotes({"sell", "fish", "shop"}, state.fishAmount, state.targetFish)
+        fireRemotes({"sell","fish","shop"}, state.fishAmount, state.targetFish)
     end
 end
 
@@ -205,8 +187,7 @@ task.spawn(function()
         if state.autoFarm then
             runAutoFarm()
             if state.selectedJob == "Fishing" then
-                selectRod()
-                selectBait()
+                selectRod(); selectBait()
                 if state.fishAmount > 0 then sellFish() end
             end
         end
@@ -223,118 +204,142 @@ end)
 setreadonly(mt, true)
 
 --// ============================================================
---// UI — SÓ A ABA FARM
+--// UI — ABA FARM
 --// ============================================================
 local FarmTab = Window:CreateTab("Farm", nil)
 
 FarmTab:CreateSection("Farm")
-
 FarmTab:CreateToggle({
-    Name = "Auto Farm",
-    Info = "Start Farming",
-    CurrentValue = false,
-    Flag = "autoFarm",
+    Name = "Auto Farm", Info = "Start Farming",
+    CurrentValue = false, Flag = "autoFarm",
     Callback = function(v) state.autoFarm = v end
 })
-
 FarmTab:CreateDropdown({
-    Name = "Jobs",
-    Info = "Select Jobs",
-    Options = {"Fishing", "Mining", "Farming", "Delivery"},
-    CurrentOption = {"Fishing"},
-    Flag = "jobSelect",
+    Name = "Jobs", Info = "Select Jobs",
+    Options = {"Fishing","Mining","Farming","Delivery"},
+    CurrentOption = {"Fishing"}, Flag = "jobSelect",
     Callback = function(opt) state.selectedJob = opt[1] end
 })
-
 FarmTab:CreateToggle({
     Name = "Include Planting",
     Info = "It plants automatically while you are farming other jobs.",
-    CurrentValue = false,
-    Flag = "includePlanting",
+    CurrentValue = false, Flag = "includePlanting",
     Callback = function(v) state.includePlanting = v end
 })
 
 FarmTab:CreateSection("Fishing")
-
 FarmTab:CreateToggle({
     Name = "Afk Checker",
     Info = "If your character stays idle for more than 5 minutes, it will automatically rejoin.",
-    CurrentValue = true,
-    Flag = "afkChecker",
+    CurrentValue = true, Flag = "afkChecker",
     Callback = function(v) state.afkChecker = v end
 })
-
 FarmTab:CreateDropdown({
-    Name = "Travel Mode",
-    Info = "Fishing only — Normal or Underground.",
-    Options = {"Underground", "Normal"},
-    CurrentOption = {"Underground"},
-    Flag = "travelMode",
-    Callback = function(opt) state.travelMode = opt[1] end
+    Name = "Travel Mode", Info = "Fishing only — Normal or Underground.",
+    Options = {"Underground","Normal"}, CurrentOption = {"Underground"},
+    Flag = "travelMode", Callback = function(opt) state.travelMode = opt[1] end
 })
-
 FarmTab:CreateDropdown({
-    Name = "Vehicle Type",
-    Info = "Select Vehicle Type.",
-    Options = {"Car", "Boat", "Helicopter", "Bike"},
-    CurrentOption = {"Car"},
-    Flag = "vehicleType",
-    Callback = function(opt) state.vehicleType = opt[1] end
+    Name = "Vehicle Type", Info = "Select Vehicle Type.",
+    Options = {"Car","Boat","Helicopter","Bike"}, CurrentOption = {"Car"},
+    Flag = "vehicleType", Callback = function(opt) state.vehicleType = opt[1] end
 })
-
 FarmTab:CreateDropdown({
-    Name = "Rod",
-    Info = "Select Hacktools, recommend Smart Select.",
-    Options = {"Smart Select", "Basic Rod", "Pro Rod", "Legendary Rod"},
-    CurrentOption = {"Smart Select"},
-    Flag = "rodSelect",
+    Name = "Rod", Info = "Select Hacktools, recommend Smart Select.",
+    Options = {"Smart Select","Basic Rod","Pro Rod","Legendary Rod"},
+    CurrentOption = {"Smart Select"}, Flag = "rodSelect",
     Callback = function(opt) state.rod = opt[1] end
 })
-
 FarmTab:CreateDropdown({
-    Name = "Bait",
-    Info = "Select Hacktools, recommend Smart Select.",
-    Options = {"Smart Select", "Worm", "Shrimp", "Magnetic"},
-    CurrentOption = {"Smart Select"},
-    Flag = "baitSelect",
+    Name = "Bait", Info = "Select Hacktools, recommend Smart Select.",
+    Options = {"Smart Select","Worm","Shrimp","Magnetic"},
+    CurrentOption = {"Smart Select"}, Flag = "baitSelect",
     Callback = function(opt) state.bait = opt[1] end
 })
-
 FarmTab:CreateInput({
-    Name = "Bait Quantity",
-    Info = "Number of Bait you need to buy.",
-    CurrentValue = "10",
-    PlaceholderText = "10",
-    Flag = "baitQty",
-    Callback = function(v)
-        local n = tonumber(v)
-        if n then state.baitQuantity = n end
-    end
+    Name = "Bait Quantity", Info = "Number of Bait you need to buy.",
+    CurrentValue = "10", PlaceholderText = "10", Flag = "baitQty",
+    Callback = function(v) local n = tonumber(v); if n then state.baitQuantity = n end end
 })
-
 FarmTab:CreateInput({
-    Name = "Fish Amount",
-    Info = "Put number you need to sell fish.",
-    CurrentValue = "50",
-    PlaceholderText = "50",
-    Flag = "fishAmt",
-    Callback = function(v)
-        local n = tonumber(v)
-        if n then state.fishAmount = n end
-    end
+    Name = "Fish Amount", Info = "Put number you need to sell fish.",
+    CurrentValue = "50", PlaceholderText = "50", Flag = "fishAmt",
+    Callback = function(v) local n = tonumber(v); if n then state.fishAmount = n end end
 })
-
 FarmTab:CreateDropdown({
     Name = "Target Fish",
     Info = "Select fish to keep. Ordered Common > Legendary. Default all.",
-    Options = {"All", "Perch", "Salmon", "Tuna", "Shark", "Legendary"},
-    CurrentOption = {"All"},
-    Flag = "targetFish",
+    Options = {"All","Perch","Salmon","Tuna","Shark","Legendary"},
+    CurrentOption = {"All"}, Flag = "targetFish",
     Callback = function(opt) state.targetFish = opt[1] end
 })
 
+--// ============================================================
+--// BOTÃO FLUTUANTE NYX
+--// ============================================================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RepoFFToggle"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = game:GetService("CoreGui")
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 80, 0, 45)
+toggleBtn.Position = UDim2.new(0, 20, 0.4, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+toggleBtn.BackgroundTransparency = 0.15
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.Text = "NYX"
+toggleBtn.TextSize = 20
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = toggleBtn
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255, 255, 255)
+stroke.Thickness = 1.5
+stroke.Transparency = 0.3
+stroke.Parent = toggleBtn
+
+local dragging, dragStart, startPos
+toggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = toggleBtn.Position
+    end
+end)
+toggleBtn.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseMovement) then
+        local delta = input.Position - dragStart
+        toggleBtn.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+toggleBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+local panelOpen = true
+local function togglePanel()
+    panelOpen = not panelOpen
+    local rg = game:GetService("CoreGui"):FindFirstChild("Rayfield")
+    if rg then rg.Enabled = panelOpen end
+end
+toggleBtn.MouseButton1Click:Connect(togglePanel)
+
 Rayfield:Notify({
-    Title = "BlockSpin | Farm",
-    Content = "Painel carregado. Ativa o Auto Farm pra começar.",
-    Duration = 4
+    Title = "BlockSpin | NYX",
+    Content = "Painel carregado. Toca no botão NYX pra abrir/fechar.",
+    Duration = 5
 })
